@@ -702,7 +702,8 @@ def main():
         compute_metrics=compute_metrics if training_args.predict_with_generate else None,
     )
     print ("[INFO] early_stopping_num=", early_stopping_num)
-    trainer.add_callback(EarlyStoppingCallback(early_stopping_num)) #number of patient epochs before early stopping
+    if training_args.do_eval:
+       trainer.add_callback(EarlyStoppingCallback(early_stopping_num)) #number of patient epochs before early stopping
     all_metrics = {}
     # Training
     if training_args.do_train:
