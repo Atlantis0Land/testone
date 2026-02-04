@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>إدارة واجهة واتساب محافظة الظاهرة</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.rtl.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        body { background-color: #f8f9fa; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        .sidebar { min-height: 100vh; background: #2c3e50; color: white; }
+        .sidebar a { color: #bdc3c7; text-decoration: none; padding: 10px; display: block; }
+        .sidebar a:hover, .sidebar a.active { background: #34495e; color: white; }
+        .card { border: none; shadow: 0 4px 6px rgba(0,0,0,0.1); margin-bottom: 20px; }
+        .progress { height: 25px; }
+    </style>
+</head>
+<body>
+    <div class="container-fluid">
+        <div class="row">
+            {% if current_user.is_authenticated %}
+            <!-- Sidebar (Only shown when logged in) -->
+            <div class="col-md-2 sidebar p-0">
+                <div class="p-3 text-center fw-bold fs-5 border-bottom border-secondary">
+                    <i class="fa-brands fa-whatsapp text-success"></i> واجهة محافظة الظاهرة
+                </div>
+                <nav class="mt-3">
+                    <a href="{{ url_for('main.dashboard') }}" class="{{ 'active' if request.endpoint == 'main.dashboard' }}">
+                        <i class="fa-solid fa-chart-line me-2"></i> لوحة التحكم
+                    </a>
+                    <a href="{{ url_for('main.templates') }}" class="{{ 'active' if 'templates' in request.endpoint }}">
+                        <i class="fa-solid fa-file-code me-2"></i> القوالب
+                    </a>
+                    <a href="{{ url_for('main.list_contacts') }}" class="{{ 'active' if request.endpoint == 'main.list_contacts' }}">
+                        <i class="fa-solid fa-address-book me-2"></i> سجل الأرقام
+                    </a>
+                    <a href="{{ url_for('main.upload_contacts') }}" class="{{ 'active' if request.endpoint == 'main.upload_contacts' }}">
+                        <i class="fa-solid fa-file-import me-2"></i> استيراد أرقام
+                    </a>
+                    <a href="{{ url_for('main.create_campaign') }}" class="{{ 'active' if 'create_campaign' in request.endpoint }}">
+                        <i class="fa-solid fa-paper-plane me-2"></i> حملة جديدة
+                    </a>
+                    <a href="{{ url_for('main.campaigns_list') }}" class="{{ 'active' if 'campaigns_list' in request.endpoint }}">
+                        <i class="fa-solid fa-clock-rotate-left me-2"></i> سجل الحملات
+                    </a>
+                    <a href="{{ url_for('main.manage_festival') }}" class="{{ 'active' if 'festival' in request.endpoint }}">
+                        <i class="fa-solid fa-camera-retro me-2"></i> إدارة المهرجان
+                    </a>
+                    {% if current_user.is_admin %}
+                    <a href="{{ url_for('main.settings') }}" class="{{ 'active' if 'settings' in request.endpoint }}">
+                        <i class="fa-solid fa-gears me-2"></i> الإعدادات العامة
+                    </a>
+                    <a href="{{ url_for('main.users') }}" class="{{ 'active' if 'users' in request.endpoint }}">
+                        <i class="fa-solid fa-users-gear me-2"></i> المستخدمين
+                    </a>
+                    {% endif %}
+                    <a href="{{ url_for('main.logout') }}" class="text-danger mt-5">
+                        <i class="fa-solid fa-right-from-bracket me-2"></i> تسجيل الخروج
+                    </a>
+                </nav>
+            </div>
+            <div class="col-md-10 p-4">
+            {% else %}
+            <!-- Full width for login page -->
+            <div class="col-md-12 p-4">
+            {% endif %}
+
+                {% with messages = get_flashed_messages() %}
+                    {% if messages %}
+                        {% for message in messages %}
+                            <div class="alert alert-info">{{ message }}</div>
+                        {% endfor %}
+                    {% endif %}
+                {% endwith %}
+                
+                {% block content %}{% endblock %}
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+    <script>
+        const socket = io({
+            path: window.location.pathname.startsWith('/wadh') ? '/wadh/socket.io' : '/socket.io'
+        });
+    </script>
+    {% block scripts %}{% endblock %}
+</body>
+</html>

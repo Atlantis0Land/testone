@@ -1,0 +1,213 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2>لوحة القيادة</h2>
+    <a href="{{ url_for('main.create_campaign') }}" class="btn btn-success btn-lg shadow-sm">
+        <i class="fa-solid fa-plus-circle me-2"></i> إنشاء حملة جديدة
+    </a>
+</div>
+
+<!-- Statistics Cards -->
+<div class="row mb-4 g-3">
+    <div class="col-md-3">
+        <div class="card p-3 text-center border-0 shadow-sm h-100" style="background: linear-gradient(to bottom right, #ffffff, #f8f9fa);">
+            <div class="text-primary mb-2"><i class="fa-solid fa-bullhorn fa-2x"></i></div>
+            <h3 class="fw-bold text-dark">{{ stats.campaigns }}</h3>
+            <span class="text-muted small">إجمالي الحملات</span>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card p-3 text-center border-0 shadow-sm h-100" style="background: linear-gradient(to bottom right, #ffffff, #f8f9fa);">
+            <div class="text-success mb-2"><i class="fa-solid fa-check-circle fa-2x"></i></div>
+            <h3 class="fw-bold text-dark">{{ stats.total_sent }}</h3>
+            <span class="text-muted small">رسائل أرسلت</span>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card p-3 text-center border-0 shadow-sm h-100" style="background: linear-gradient(to bottom right, #ffffff, #f8f9fa);">
+            <div class="text-info mb-2"><i class="fa-solid fa-users fa-2x"></i></div>
+            <h3 class="fw-bold text-dark">{{ stats.contacts }}</h3>
+            <span class="text-muted small">جهات اتصال</span>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card p-3 text-center border-0 shadow-sm h-100" style="background: linear-gradient(to bottom right, #ffffff, #e3f2fd);">
+            <div class="text-warning mb-2"><i class="fa-solid fa-eye fa-2x"></i></div>
+            <h3 class="fw-bold text-dark">{{ stats.festival_visits }}</h3>
+            <span class="text-muted small fw-bold">زيارات صفحة المهرجان</span>
+        </div>
+    </div>
+</div>
+
+<!-- Charts Section -->
+<div class="row mb-4">
+    <div class="col-md-4">
+        <div class="card border-0 shadow-sm h-100">
+            <div class="card-header bg-white border-0 fw-bold py-3">
+                <i class="fa-solid fa-chart-pie me-2 text-primary"></i> معدل نجاح الإرسال
+            </div>
+            <div class="card-body">
+                <div style="position: relative; height: 250px; width: 100%;">
+                    <canvas id="successChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-8">
+        <div class="card border-0 shadow-sm h-100">
+            <div class="card-header bg-white border-0 fw-bold py-3">
+                <i class="fa-solid fa-chart-simple me-2 text-primary"></i> أحجام آخر الحملات
+            </div>
+            <div class="card-body">
+                <div style="position: relative; height: 300px; width: 100%;">
+                    <canvas id="campaignsChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<h4 class="mb-3 text-muted">الحملات النشطة حالياً</h4>
+{% if campaigns %}
+<div class="row" id="campaigns-container">
+    {% for campaign in campaigns %}
+    <div class="col-md-6 col-lg-4" id="camp-card-{{ campaign.id }}">
+        <div class="card p-3 shadow-sm border-0">
+            <div class="d-flex justify-content-between align-items-center mb-2">
+                <h5 class="card-title mb-0 text-truncate">{{ campaign.name }}</h5>
+                <span class="badge bg-{{ 'success' if campaign.status == 'completed' else 'warning' }} status-badge rounded-pill">
+                    {{ campaign.status }}
+                </span>
+            </div>
+            <p class="text-muted small mb-2">قالب: {{ campaign.template.name }}</p>
+            
+            <div class="progress mb-2 position-relative" style="height: 20px; border-radius: 10px;">
+                <div class="progress-bar progress-bar-striped progress-bar-animated bg-success" 
+                     role="progressbar" 
+                     style="width: {{ (campaign.sent_count + campaign.failed_count) / campaign.total_contacts * 100 if campaign.total_contacts > 0 else 0 }}%">
+                </div>
+                <span class="position-absolute w-100 text-center text-dark fw-bold progress-text" style="top: 0px; font-size: 0.8rem; line-height: 20px;">
+                    {{ ((campaign.sent_count + campaign.failed_count) / campaign.total_contacts * 100)|int if campaign.total_contacts > 0 else 0 }}%
+                </span>
+            </div>
+
+            <div class="d-flex justify-content-between text-center mt-2 small">
+                <div class="text-success">
+                    <div class="fw-bold sent-count">{{ campaign.sent_count }}</div>
+                    <span>نجاح</span>
+                </div>
+                <div class="text-danger">
+                    <div class="fw-bold failed-count">{{ campaign.failed_count }}</div>
+                    <span>فشل</span>
+                </div>
+                <div class="text-secondary">
+                    <div class="fw-bold total-count">{{ campaign.total_contacts }}</div>
+                    <span>إجمالي</span>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% else %}
+<div class="alert alert-light text-center border shadow-sm py-4">
+    <i class="fa-solid fa-mug-hot fa-2x text-muted mb-2"></i>
+    <br>
+    لا توجد حملات قيد المعالجة حالياً. <a href="{{ url_for('main.campaigns_list') }}" class="fw-bold">عرض السجل</a>
+</div>
+{% endif %}
+
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    // --- Socket IO Logic ---
+    // Note: 'socket' is already defined in base.html, so we use it directly here.
+
+    socket.on('connect', () => {
+        console.log('Connected to server for live updates');
+    });
+
+    socket.on('campaign_update', (data) => {
+        const cardId = `camp-card-${data.campaign_id}`;
+        const card = document.getElementById(cardId);
+        
+        if (card) {
+            const progressBar = card.querySelector('.progress-bar');
+            const progressText = card.querySelector('.progress-text');
+            progressBar.style.width = `${data.progress}%`;
+            progressText.innerText = `${data.progress}%`;
+
+            card.querySelector('.sent-count').innerText = data.sent;
+            card.querySelector('.failed-count').innerText = data.failed;
+            
+            const badge = card.querySelector('.status-badge');
+            badge.innerText = data.status;
+            if (data.status === 'completed') {
+                badge.classList.remove('bg-warning');
+                badge.classList.add('bg-success');
+                progressBar.classList.remove('progress-bar-animated');
+            }
+        }
+    });
+
+    // --- Chart.js Logic ---
+    
+    // 1. Success Rate (Doughnut)
+    const ctxSuccess = document.getElementById('successChart').getContext('2d');
+    new Chart(ctxSuccess, {
+        type: 'doughnut',
+        data: {
+            labels: {{ chart_success.labels | tojson }},
+            datasets: [{
+                data: {{ chart_success.data | tojson }},
+                backgroundColor: ['#198754', '#dc3545'], // Success Green, Danger Red
+                borderWidth: 0,
+                hoverOffset: 4
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { position: 'bottom' }
+            },
+            cutout: '70%'
+        }
+    });
+
+    // 2. Campaigns Volume (Bar)
+    const ctxCampaigns = document.getElementById('campaignsChart').getContext('2d');
+    new Chart(ctxCampaigns, {
+        type: 'bar',
+        data: {
+            labels: {{ chart_campaigns.labels | tojson }},
+            datasets: [{
+                label: 'إجمالي جهات الاتصال',
+                data: {{ chart_campaigns.data_total | tojson }},
+                backgroundColor: '#0d6efd', // Primary Blue
+                borderRadius: 5
+            },
+            {
+                label: 'تم الإرسال بنجاح',
+                data: {{ chart_campaigns.data_sent | tojson }},
+                backgroundColor: '#198754', // Success Green
+                borderRadius: 5
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                y: { beginAtZero: true, grid: { color: '#f0f0f0' } },
+                x: { grid: { display: false } }
+            },
+            plugins: {
+                legend: { position: 'top' }
+            }
+        }
+    });
+</script>
+{% endblock %}
